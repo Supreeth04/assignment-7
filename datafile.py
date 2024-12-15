@@ -4,6 +4,8 @@ from torch.utils.data import DataLoader
 
 # Define transformations
 transform = transforms.Compose([
+    transforms.Resize((28, 28)),
+    transforms.RandomRotation((-7.0, 7.0), fill=(1,)),
     transforms.ToTensor(),
     transforms.Normalize((0.1307,), (0.3081,))  # MNIST mean and std
 ])

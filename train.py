@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torchsummary import summary
 from datafile import train_loader, test_loader
-from models import Model_1, Model_2, Model_3
+from models import Model_1, Model_2, Model_3, Model_4
 from tqdm import tqdm
 
 def count_parameters(model):
@@ -13,12 +13,12 @@ def count_parameters(model):
 def model_summary(model):
     summary(model=model, input_size=(1, 28, 28))
 
-def train_model(model, epochs, learning_rate=0.001):
+def train_model(model, epochs, learning_rate):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-7)
     scheduler = ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=3, verbose=True)
     
     best_accuracy = 0.0
@@ -87,9 +87,9 @@ def train_model(model, epochs, learning_rate=0.001):
 
 if __name__ == "__main__":
     # Example usage
-    models = [Model_1(), Model_2(), Model_3()]
-    learning_rates = [0.01, 0.005, 0.001]
-    epochs = [10, 12, 15]
+    models = [Model_4()]
+    learning_rates = [0.001]
+    epochs = [15]
     
     for model, lr, epoch in zip(models, learning_rates, epochs):
         print(f"\nTraining {model.__class__.__name__}")
