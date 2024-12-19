@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, OneCycleLR
 from torchsummary import summary
 from datafile import train_loader, test_loader
 from models import Model_1, Model_2, Model_3, Model_4
@@ -10,8 +10,9 @@ from tqdm import tqdm
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def model_summary(model):
-    summary(model=model, input_size=(1, 28, 28))
+def model_summary(model, device):
+    model = model.to(device)
+    summary(model, input_size=(1, 28, 28))
 
 def train_model(model, epochs, learning_rate):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -19,7 +20,14 @@ def train_model(model, epochs, learning_rate):
     
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-7)
-    scheduler = ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=3, verbose=True)
+    scheduler = ReduceLROnPlateau( 
+        optimizer, 
+        mode='max', 
+        factor=0.1,  
+        patience=1,  
+        verbose=True,
+        min_lr=1e-6
+    )
     
     best_accuracy = 0.0
     
@@ -29,7 +37,7 @@ def train_model(model, epochs, learning_rate):
         correct = 0
         total = 0
         
-        # Add tqdm progress bar for training
+        # Training phase
         pbar = tqdm(train_loader, desc=f'Epoch {epoch+1}/{epochs} [Train]')
         for data, target in pbar:
             data, target = data.to(device), target.to(device)
@@ -56,7 +64,6 @@ def train_model(model, epochs, learning_rate):
         correct = 0
         total = 0
         
-        # Add tqdm progress bar for validation
         with torch.no_grad():
             pbar = tqdm(test_loader, desc=f'Epoch {epoch+1}/{epochs} [Valid]')
             for data, target in pbar:
@@ -77,6 +84,7 @@ def train_model(model, epochs, learning_rate):
         print(f'Validation Accuracy: {val_accuracy:.2f}%')
         print('-' * 50)
         
+        # Step the scheduler with validation accuracy
         scheduler.step(val_accuracy)
         
         if val_accuracy > best_accuracy:
@@ -86,14 +94,17 @@ def train_model(model, epochs, learning_rate):
     return best_accuracy
 
 if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+    
     # Example usage
     models = [Model_4()]
-    learning_rates = [0.001]
+    learning_rates = [0.05]
     epochs = [15]
     
     for model, lr, epoch in zip(models, learning_rates, epochs):
         print(f"\nTraining {model.__class__.__name__}")
         print(f"Parameters: {count_parameters(model)}")
-        model_summary(model)
+        model_summary(model, device)
         best_acc = train_model(model, epochs=epoch, learning_rate=lr)
         print(f"Best accuracy: {best_acc:.2f}%")
