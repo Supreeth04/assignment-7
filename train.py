@@ -10,8 +10,9 @@ from tqdm import tqdm
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def model_summary(model):
-    summary(model=model, input_size=(1, 28, 28))
+def model_summary(model, device):
+    model = model.to(device)
+    summary(model, input_size=(1, 28, 28))
 
 def train_model(model, epochs, learning_rate=0.001):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -86,14 +87,17 @@ def train_model(model, epochs, learning_rate=0.001):
     return best_accuracy
 
 if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+    
     # Example usage
-    models = [Model_1(), Model_2(), Model_3()]
-    learning_rates = [0.01, 0.005, 0.001]
-    epochs = [10, 12, 15]
+    models = [Model_1()]
+    learning_rates = [0.01]
+    epochs = [10]
     
     for model, lr, epoch in zip(models, learning_rates, epochs):
         print(f"\nTraining {model.__class__.__name__}")
         print(f"Parameters: {count_parameters(model)}")
-        model_summary(model)
+        model_summary(model, device)
         best_acc = train_model(model, epochs=epoch, learning_rate=lr)
         print(f"Best accuracy: {best_acc:.2f}%")
