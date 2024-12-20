@@ -6,6 +6,7 @@ from torchsummary import summary
 from datafile import train_loader, test_loader
 from models import Model_1, Model_2, Model_3, Model_4
 from tqdm import tqdm
+from tabulate import tabulate
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -17,6 +18,9 @@ def model_summary(model, device):
 def train_model(model, epochs, learning_rate):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
+    
+    # Initialize metrics storage
+    metrics = []
     
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-7)
@@ -78,10 +82,21 @@ def train_model(model, epochs, learning_rate):
         
         val_accuracy = 100. * correct / total
         
+        # Store metrics
+        current_lr = optimizer.param_groups[0]['lr']
+        metrics.append([
+            epoch + 1,
+            f"{current_lr:.6f}",
+            f"{train_accuracy:.2f}%",
+            f"{val_accuracy:.2f}%",
+            f"{running_loss/len(train_loader):.3f}"
+        ])
+        
         print(f'\nEpoch: {epoch+1}/{epochs}')
         print(f'Training Loss: {running_loss/len(train_loader):.3f}')
         print(f'Training Accuracy: {train_accuracy:.2f}%')
         print(f'Validation Accuracy: {val_accuracy:.2f}%')
+        print(f'Current learning rate: {current_lr}')
         print('-' * 50)
         
         # Step the scheduler with validation accuracy
@@ -90,6 +105,11 @@ def train_model(model, epochs, learning_rate):
         if val_accuracy > best_accuracy:
             best_accuracy = val_accuracy
             torch.save(model.state_dict(), f'best_{model.__class__.__name__}.pth')
+    
+    # Print final metrics table
+    headers = ["Epoch", "Learning Rate", "Train Acc", "Test Acc", "Loss"]
+    print("\nTraining Metrics:")
+    print(tabulate(metrics, headers=headers, tablefmt="grid"))
     
     return best_accuracy
 
@@ -101,7 +121,7 @@ if __name__ == "__main__":
     models = [Model_4()]
     learning_rates = [0.05]
     epochs = [15]
-    
+    print(f"learning rate: {learning_rates[0]}, epochs: {epochs[0]}, model: {models[0].__class__.__name__}")
     for model, lr, epoch in zip(models, learning_rates, epochs):
         print(f"\nTraining {model.__class__.__name__}")
         print(f"Parameters: {count_parameters(model)}")

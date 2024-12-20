@@ -51,19 +51,19 @@ class Model_4(nn.Module):
         self.finalconv = nn.Conv2d(10, 10, kernel_size=1)
 
     def forward(self, x):
-        x = self.convBlock1(x)  # 26x26
-        x = self.convBlock2(x)  # 24x24
-        x = self.pool1(x)        # 11x11
-        x = self.convBlock3(x)  # 22x22
+        x = self.convBlock1(x)  
+        x = self.convBlock2(x)  
+        x = self.pool1(x)        
+        x = self.convBlock3(x) 
 
-        x = self.convBlock4(x)  # 11x11
-        x = self.pool1(x)        # 11x11
+        x = self.convBlock4(x)  
+        x = self.pool1(x)       
 
-        x = self.convBlock5(x)  # 9x9
-        # x = self.convBlock6(x)  # 9x9
-        # x = self.convBlock7(x)  # 7x7
+        x = self.convBlock5(x) 
+        # x = self.convBlock6(x) 
+        # x = self.convBlock7(x) 
 
-        x = self.gap(x)         # 1x1
+        x = self.gap(x)
         x = self.finalconv(x)
         x = x.view(-1, 10)
 
@@ -76,15 +76,12 @@ TARGET:
 - Complete within 15 epochs
 
 RESULT:
-- Parameters: 6,986 (exact match)
-- Channel progression: 1->8->16->20->16->20->16->10->10
-- Spatial reduction: 28->26->24->22->11->9->7->1
+- Parameters: 7,204 
+- Obtained accuracy is varying between 99.1% and 99.3% every time when training is run.
 
 ANALYSIS:
-- Increased channel widths for better feature extraction
-- Strategic use of 1x1 convolutions for channel reduction
-- Dropout (0.1) throughout except after block 3
+- Changed Dropout (0.05) 
 - Batch normalization for training stability
-- Progressive spatial reduction through no-padding convolutions
-- Balanced parameter distribution across layers
+- Increased learning rate to 0.05, using ReduceLROnPlateau scheduler with patience 1, factor 0.1.
+- Model is underfitting, can be further optimised to achieve higher accuracy.
 """ 
