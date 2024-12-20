@@ -3,23 +3,14 @@
 A PyTorch implementation of MNIST digit classification focusing on efficient model architectures and training strategies.
 
 ## Project Structure
-
 ├── models/
-
 │ ├── init.py
-
 │ ├── model_1.py (Baseline Model)
-
 │ └── model_2.py (Optimized Model)
-
 ├── data/
-
 │ └── MNIST/
-
 ├── datafile.py
-
 ├── train.py
-
 └── requirements.txt
 
 ## Models Overview
